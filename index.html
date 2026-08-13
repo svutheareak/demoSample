@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academic Portal</title>
+<meta name="description" content="Student portal — academic records, attendance, grades, exams, payments and reports.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+<a class="skip-link" href="#view">Skip to content</a>
+
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">AP</div>
+      <div>
+        <div class="brand-name">Academic Portal</div>
+        <div class="brand-sub">Student</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Main"></nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-secondary btn-sm sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Toggle navigation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+      <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+      <div class="topbar-right">
+        <div class="term-switch" id="term-switch" hidden></div>
+        <div class="who">
+          <div class="who-avatar" aria-hidden="true">SV</div>
+          <div class="who-meta">
+            <div class="who-name">Sam Vutheareak</div>
+            <div class="who-id">BIT-2023-0417</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content" id="view" tabindex="-1"></main>
+  </div>
+
+</div>
+
+<!-- Classic scripts in dependency order — no modules, so file:// works. -->
+<script src="assets/js/data.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/views-records.js"></script>
+<script src="assets/js/views-more.js"></script>
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>

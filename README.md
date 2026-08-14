@@ -1,7 +1,8 @@
 # Academic Portal
 
-A student portal front-end built on the **Modernist** design system, implementing
-the structure from the *Academic Portal Mind Map* site map.
+A student portal front-end implementing the structure from the *Academic Portal
+Mind Map* site map, in an indigo/white theme: a full-width blue header bar, white
+cards on a cool grey plane, soft radii and hairline borders.
 
 Open `index.html` in any browser — no build step, no server, no dependencies.
 
@@ -53,17 +54,20 @@ ungraded (`score: null`). Rather than counting them as zero, `coursePct()` drops
 ungraded categories and re-normalises the rest, so the figure shown is standing
 so far (at 75% coverage) rather than a false low.
 
-**Charts are single-series and single-hue.** The palette validator puts
-status-good `#0ca30c` at ΔE 1.7 from the Modernist accent `#ec3013` under
-deuteranopia — indistinguishable. A categorical palette built from Modernist's
-two ramps could not be made colourblind-safe, so every chart uses one hue
-(`#ec3013`, which passes the lightness, chroma and contrast gates on both
-surfaces) and carries no legend, since a single series is named by its title.
-Status therefore never rides on colour: every badge pairs a glyph with a text
-label. Every chart also has a table of the same numbers on the same page.
+**Charts are single-series and single-hue.** Every chart uses the brand blue
+`#3b4ee0`, which clears the lightness band, the chroma floor and 3:1 contrast on
+both the white card and the grey page plane. A single series needs no legend —
+the chart title names what is plotted.
 
-**Light mode only.** Modernist ships no dark palette; inventing one here would
-drift from the system.
+Colour never carries meaning alone: every status badge pairs a glyph with a text
+label, and every chart has a table of the same numbers on the same page. That
+rule earns its keep — the original red theme put status-green `#0ca30c` at
+**ΔE 1.7** from the accent under deuteranopia (indistinguishable); blue moves the
+same pair to **ΔE 34.7**. Re-run `scripts/validate_palette.js` from the dataviz
+skill before changing `--viz-series` again.
+
+**Light mode only.** No dark palette is defined; the tokens would need their own
+validated dark steps rather than an automatic flip.
 
 **Attendance rules are enforced, not decorative.** Excused absences leave the
 denominator; lateness counts as present. A course under 75% raises a dashboard

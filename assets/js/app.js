@@ -80,9 +80,6 @@ const NAV = [
 
 const ROUTES = Object.assign({}, RecordViews, MoreViews);
 
-/* Views that read the semester switcher; elsewhere the control is hidden. */
-const TERM_AWARE = ['records', 'records/courses', 'records/attendance', 'records/grades', 'records/exams', 'dashboard'];
-
 const App = (() => {
   let currentSemId = SEMESTER_2.id;
 
@@ -123,21 +120,6 @@ const App = (() => {
     });
   }
 
-  function renderTermSwitch(show) {
-    const wrap = el('term-switch');
-    wrap.hidden = !show;
-    if (!show) return;
-    wrap.innerHTML = `
-      <label for="term-select">Semester</label>
-      <select class="input" id="term-select">
-        ${ALL_SEMESTERS.map((s) => `<option value="${s.id}"${s.id === currentSemId ? ' selected' : ''}>${s.label} · ${s.year}</option>`).join('')}
-      </select>`;
-    el('term-select').addEventListener('change', (e) => {
-      currentSemId = e.target.value;
-      render();
-    });
-  }
-
   function render() {
     const { path, query, href } = parseHash();
     const view = ROUTES[path] || ROUTES['dashboard'];
@@ -152,9 +134,16 @@ const App = (() => {
       i === arr.length - 1 ? `<span class="here">${c}</span>` : `<span>${c}</span><span class="sep">/</span>`
     ).join('');
     markActive(ROUTES[path] ? href : '#/dashboard');
-    renderTermSwitch(TERM_AWARE.includes(path));
 
-    // Behaviour
+    // Behaviour. The semester picker is rendered by the view that owns it
+    // (the four semester-scoped Academic Records pages), but the selection
+    // itself lives here so it survives navigation between them.
+    const termSel = root.querySelector('[data-term-select]');
+    if (termSel) termSel.addEventListener('change', (e) => {
+      currentSemId = e.target.value;
+      render();
+    });
+
     Chart.attachTips(root);
     if (view.mount) view.mount(root, ctx);
 

@@ -11,8 +11,10 @@ const MoreViews = (() => {
   const dashboard = {
     title: 'Dashboard',
     crumb: ['Dashboard'],
-    render(ctx) {
-      const sem = ctx.sem;
+    render() {
+      // The dashboard reports "now", so it always reads the running semester —
+      // it deliberately does not follow the Academic Records term picker.
+      const sem = activeSemester();
       const cum = cumulativeGPA();
       const fin = financeSummary();
       const att = semesterAttendance(sem);

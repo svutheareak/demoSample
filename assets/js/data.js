@@ -585,6 +585,9 @@ function financeSummary() {
 /* Misc helpers shared by the views */
 const ALL_SEMESTERS = [SEMESTER_1, SEMESTER_2];
 const semesterById = (id) => ALL_SEMESTERS.find((s) => s.id === id) || SEMESTER_2;
+/** The semester actually running — what "now" means for the dashboard, which
+    reports current state rather than letting you browse terms. */
+const activeSemester = () => ALL_SEMESTERS.find((s) => s.status === 'In progress') || ALL_SEMESTERS[ALL_SEMESTERS.length - 1];
 const courseByCode = (sem, code) => sem.courses.find((c) => c.code === code);
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -26,7 +26,25 @@ const RecordViews = (() => {
   ];
 
   const pct1 = (n) => n.toFixed(1) + '%';
-  const chrome = (route) => tabs(TABS, route);
+
+  /* The semester selector belongs to the four pages that sit UNDER the
+     "Semester" node of the site map — it is that node. GPA spans every term,
+     the transcript is the whole history and the calendar is the whole year, so
+     none of those three show it. Keeping it in the section bar rather than the
+     global header makes its scope visible: it sits with what it changes. */
+  const TERM_SCOPED = ['#/records/courses', '#/records/attendance', '#/records/grades', '#/records/exams'];
+
+  function chrome(route, sem) {
+    const picker = TERM_SCOPED.includes(route) && sem
+      ? `<div class="section-term">
+           <label for="term-select">Semester</label>
+           <select class="input" id="term-select" data-term-select>
+             ${ALL_SEMESTERS.map((s) => `<option value="${s.id}"${s.id === sem.id ? ' selected' : ''}>${esc(s.label)} · ${esc(s.year)}</option>`).join('')}
+           </select>
+         </div>`
+      : '';
+    return `<div class="section-bar no-print">${tabs(TABS, route)}${picker}</div>`;
+  }
 
   /* ── Overview — the Academic Year node ─────────────────────────────────── */
   const overview = {
@@ -131,7 +149,7 @@ const RecordViews = (() => {
           ])
         })}`;
 
-      return chrome('#/records/courses') + pageHead({
+      return chrome('#/records/courses', sem) + pageHead({
         kicker: sem.label + ' · ' + sem.year,
         title: 'Courses',
         lead: 'Every course you are enrolled in this semester, with its syllabus, teaching staff and downloadable materials.'
@@ -189,7 +207,7 @@ const RecordViews = (() => {
         `<span class="text-muted text-small">${esc(l.note)}</span>`
       ]);
 
-      return chrome('#/records/attendance') + pageHead({
+      return chrome('#/records/attendance', sem) + pageHead({
         kicker: sem.label + ' · ' + sem.year,
         title: 'Attendance',
         lead: `Excused absences are removed from the denominator; lateness still counts as present. Falling below ${ATTENDANCE_THRESHOLD * 100}% in a course bars you from its final examination.`
@@ -273,7 +291,7 @@ const RecordViews = (() => {
 
       const cg = courseGrade(selected);
 
-      return chrome('#/records/grades') + pageHead({
+      return chrome('#/records/grades', sem) + pageHead({
         kicker: sem.label + ' · ' + sem.year,
         title: 'Grades',
         lead: 'Course marks are weighted ' + Object.entries(WEIGHTS).map(([k, v]) => `${k.toLowerCase()} ${v * 100}%`).join(', ') +
@@ -363,7 +381,7 @@ const RecordViews = (() => {
           <a class="btn btn-secondary" href="#/records/attendance">Check attendance</a>
         </div>`;
 
-      return chrome('#/records/exams') + pageHead({
+      return chrome('#/records/exams', sem) + pageHead({
         kicker: sem.label + ' · ' + sem.year,
         title: 'Exams',
         lead: 'Examination schedule, hall tickets and final marks. A hall ticket is withheld automatically while a course sits below the attendance requirement.'

@@ -582,6 +582,40 @@ function financeSummary() {
   return { ledger, charged, paid, outstanding, pending, nextDue };
 }
 
+/**
+ * Spread an amount over the given charges, oldest first — the same order
+ * chargeLedger() settles them in, so a payment preview can never promise a
+ * split the ledger will not honour. Lives here, beside that function, because
+ * the two have to stay in step.
+ */
+function allocatePayment(charges, amount) {
+  let left = amount;
+  const out = [];
+  for (const c of charges) {
+    const take = Math.min(left, c.outstanding);
+    if (take <= 0) continue;
+    out.push({ id: c.id, desc: c.desc, applied: take });
+    left -= take;
+  }
+  return out;
+}
+
+const nextReceiptId = () =>
+  'RCP-' + (Finance.payments.reduce((m, p) => Math.max(m, +p.id.slice(4) || 0), 0) + 1);
+
+/**
+ * Record a cleared payment and return its receipt number. Finance.payments is
+ * the only thing the money figures derive from, so this single push moves the
+ * fees table, the dashboard alert, history, receipts, the financial report and
+ * the transcript hold together. Nothing is persisted — reloading the page
+ * reloads this file, and the account returns to its seeded state.
+ */
+function recordPayment({ method, amount, against }) {
+  const id = nextReceiptId();
+  Finance.payments.push({ id, date: TODAY, method, amount, against: against.join(', '), status: 'Cleared' });
+  return id;
+}
+
 /* Misc helpers shared by the views */
 const ALL_SEMESTERS = [SEMESTER_1, SEMESTER_2];
 const semesterById = (id) => ALL_SEMESTERS.find((s) => s.id === id) || SEMESTER_2;

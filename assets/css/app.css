@@ -1,17 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Academic Portal — stylesheet
 
-   Indigo/white theme: a full-width blue header bar, white cards on a cool grey
+   Blue/white theme: a full-width blue header bar, white cards on a cool grey
    plane, soft radii and hairline borders.
 
    The whole palette lives in the token block below — components reference roles
    only, so a re-theme touches nothing else.
 
-   Series blue #3b4ee0 was checked with the palette validator: it clears the
-   lightness band, the chroma floor and 3:1 contrast on both the white card and
-   the grey page plane, and it sits ΔE 34.7 from status-green under deuteranopia
-   (the previous red accent sat at 1.7 — indistinguishable). Status badges still
-   pair a glyph with a text label so meaning never rests on hue.
+   Series blue #3458f4 clears the lightness band, the chroma floor and 4.5:1 as
+   text on both the white card (5.46:1) and the grey page plane (5.04:1) — well
+   past the 3:1 that non-text marks need. A blue series and a green status badge
+   are hard to separate under deuteranopia, so hue is never the only signal:
+   every badge pairs a glyph with a text label, and every chart is backed by a
+   table of the same numbers on the same page.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Tokens ──────────────────────────────────────────────────────────────── */
@@ -23,19 +24,19 @@
   --color-text: #232838;
 
   /* Brand */
-  --color-accent: #3b4ee0;
-  --color-accent-2: #6b7bef;
+  --color-accent: #3458f4;      /* 5.46:1 on white, 5.04:1 on the page plane */
+  --color-accent-2: #6a83f7;
   --color-navy: #1e2a4a;        /* header-bar dark control */
 
-  --color-accent-100: #eef0fe;
-  --color-accent-200: #dde1fd;
-  --color-accent-300: #bcc4fa;
-  --color-accent-400: #94a0f5;
-  --color-accent-500: #6b7bef;
-  --color-accent-600: #2f40cc;
-  --color-accent-700: #2433a8;
-  --color-accent-800: #1c2880;
-  --color-accent-900: #161f5c;
+  --color-accent-100: #f0f3ff;  /* tints — decorative only, no contrast floor */
+  --color-accent-200: #e8ecfe;
+  --color-accent-300: #c3cefc;
+  --color-accent-400: #8fa3f9;
+  --color-accent-500: #6a83f7;
+  --color-accent-600: #2a4be0;  /* button hover  — white text 6.60:1 */
+  --color-accent-700: #2544d6;  /* button active — white text 7.30:1 */
+  --color-accent-800: #1f3cc4;
+  --color-accent-900: #1a34ad;
 
   /* Cool neutrals */
   --color-neutral-100: #f7f8fa;
@@ -80,16 +81,16 @@
   /* Ink roles */
   --ink-1: var(--color-text);
   --ink-2: #5b6478;
-  --ink-3: #8b93a5;
+  --ink-3: #646c7a;             /* 5.29:1 white · 4.89:1 page · 4.99:1 sunken */
 
   /* Status — fixed palette, never load-bearing on its own. */
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
+  --status-good: #097409;       /* 5.98:1 on white */
+  --status-warning: #7d5200;    /* 6.82:1 — yellow cannot reach 4.5:1 as text */
   --status-critical: #d03b3b;
 
   /* Chart roles — one hue only. */
   --viz-series: var(--color-accent);
-  --viz-track: var(--color-accent-200);
+  --viz-track: #6a7ff2;         /* 3.54:1 white · 3.27:1 page — carries meaning */
   --viz-grid: #eaedf4;
   --viz-axis: var(--color-divider-strong);
   --viz-surface: var(--color-surface);
@@ -97,7 +98,12 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* The topbar is sticky and the document is the scroll container, so anything
+     scrolled to the top of the viewport lands under it. Keep focus clear. */
+  scroll-padding-top: calc(var(--topbar-h) + 16px);
+}
 
 body {
   margin: 0;
@@ -151,7 +157,7 @@ a { color: var(--color-accent); text-underline-offset: 3px; }
   transition: background 0.12s, border-color 0.12s;
 }
 .btn svg { display: block; }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
 .btn-primary { background: var(--color-accent); color: #fff; box-shadow: var(--shadow-sm); }
 .btn-primary:hover { background: var(--color-accent-600); }
 .btn-primary:active { background: var(--color-accent-700); }
@@ -195,7 +201,7 @@ a { color: var(--color-accent); text-underline-offset: 3px; }
 .brand-name { font-family: var(--font-heading); font-weight: 700; font-size: 16px; line-height: 1.15; color: #fff; }
 .brand-sub { font-size: 11px; color: rgba(255, 255, 255, 0.72); letter-spacing: 0.06em; text-transform: uppercase; }
 
-.crumbs { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; color: rgba(255, 255, 255, 0.7); min-width: 0; }
+.crumbs { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; color: #e9ecfd; min-width: 0; }
 .crumbs .sep { color: rgba(255, 255, 255, 0.45); }
 .crumbs .here { color: #fff; font-weight: 600; }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: var(--space-4); }
@@ -327,11 +333,12 @@ a { color: var(--color-accent); text-underline-offset: 3px; }
 .meter-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-2); }
 
 /* ── Section bar — tabs, plus any control scoped to this section ─────────── */
+/* Holds the semester picker. The section tab strip that used to sit here was
+   a link-for-link duplicate of the sidebar group, so it was removed. */
 .section-bar {
-  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4);
-  border-bottom: 1px solid var(--color-divider); margin-bottom: var(--space-5); flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-4);
+  margin-bottom: var(--space-4); flex-wrap: wrap;
 }
-.section-bar > .tabs { border-bottom: 0; margin-bottom: 0; min-width: 0; flex: 1; }
 .section-term {
   display: flex; align-items: center; gap: var(--space-2); flex: none;
   font-size: 13px; color: var(--ink-2); padding-bottom: var(--space-2);
@@ -340,14 +347,6 @@ a { color: var(--color-accent); text-underline-offset: 3px; }
 .section-term select { min-height: 34px; font-size: 13px; width: auto; }
 
 /* ── Tabs ────────────────────────────────────────────────────────────────── */
-.tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--color-divider); margin-bottom: var(--space-5); overflow-x: auto; }
-.tab {
-  padding: var(--space-3) var(--space-4); font-size: 14px; color: var(--ink-2);
-  text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
-}
-.tab:hover { color: var(--ink-1); background: var(--color-sunken); }
-.tab[aria-current="page"] { color: var(--color-accent); border-bottom-color: var(--color-accent); font-family: var(--font-heading); font-weight: 600; }
-
 /* ── Key/value list ──────────────────────────────────────────────────────── */
 .kv { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); font-size: 14px; margin: 0; }
 .kv dt { color: var(--ink-3); font-size: 13px; }
@@ -447,6 +446,100 @@ button.row { cursor: pointer; }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+/* ── Grouped form choices ────────────────────────────────────────────────── */
+.fieldset { border: 0; margin: 0 0 var(--space-5); padding: 0; min-width: 0; }
+.fieldset > legend {
+  padding: 0; margin-bottom: var(--space-2);
+  font-family: var(--font-heading); font-weight: 700; font-size: 15px; color: var(--ink-1);
+}
+.fieldset > .text-small { margin: 0 0 var(--space-3); }
+
+/* One choice. The label is the target, so the hit area clears the 24px 2.5.8
+   floor by a wide margin even though the control itself is 18px. */
+.pick {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3);
+  align-items: start; padding: var(--space-3);
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+  margin-bottom: var(--space-2); background: var(--color-surface);
+}
+.pick:hover { border-color: var(--color-neutral-400); background: var(--color-sunken); }
+.pick input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--color-accent); }
+.pick label { display: grid; gap: 2px; cursor: pointer; }
+.pick-title { font-size: 14px; color: var(--ink-1); }
+.pick-meta { font-size: 13px; color: var(--ink-2); }
+.pick-child { margin: 0 0 var(--space-2) var(--space-8); max-width: 280px; }
+
+/* ── Form errors ─────────────────────────────────────────────────────────── */
+/* 3.3.1 identifies the field, 3.3.3 says what to do about it. The summary is
+   role="alert" and takes focus, so a failed submit is never silent. */
+.field-error {
+  display: flex; align-items: flex-start; gap: 6px;
+  margin: 0 0 var(--space-2); font-size: 13px; color: var(--status-critical);
+}
+.field-error svg { flex: none; margin-top: 2px; }
+
+.error-summary {
+  border: 1px solid var(--status-critical); border-left: 4px solid var(--status-critical);
+  border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5); background: var(--color-surface);
+}
+.error-summary h4 { color: var(--status-critical); margin-bottom: var(--space-2); }
+.error-summary ul { margin: 0; padding-left: var(--space-4); }
+.error-summary li { margin-bottom: var(--space-1); }
+.error-jump {
+  padding: 0; background: none; border: 0; font: inherit; font-size: 14px; text-align: left;
+  color: var(--status-critical); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+
+/* Belt and braces: a component rule must never beat the hidden attribute. */
+[hidden] { display: none !important; }
+
+/* ── Toasts ──────────────────────────────────────────────────────────────── */
+/* The strip only positions; each toast carries its own live role. It never
+   swallows clicks meant for the page, so pointer-events are off here and back
+   on for the toasts themselves. */
+.toasts {
+  position: fixed; z-index: 80;
+  right: var(--space-6); bottom: var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-2);
+  width: min(380px, calc(100vw - var(--space-8)));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2);
+  align-items: start;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider-strong);
+  border-left: 4px solid var(--toast-accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.toast.is-in { opacity: 1; transform: none; }
+.toast.is-leaving { opacity: 0; transform: translateY(8px); }
+.toast.is-success { --toast-accent: var(--status-good); }
+.toast.is-error { --toast-accent: var(--status-critical); }
+
+.toast-live { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.toast-icon { color: var(--toast-accent); display: flex; padding-top: 1px; }
+.toast-msg { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-1); }
+
+/* 24 x 24 is the 2.5.8 Target Size (Minimum) floor. */
+.toast-close {
+  width: 24px; height: 24px; display: grid; place-items: center; padding: 0;
+  background: none; border: 0; border-radius: var(--radius-sm);
+  color: var(--ink-3); cursor: pointer;
+}
+.toast-close:hover { background: var(--color-neutral-200); color: var(--ink-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; opacity: 1; transform: none; }
+  .toast.is-leaving { opacity: 0; }
+}
+
 .sidebar-toggle { display: none; }
 .topbar .sidebar-toggle {
   background: rgba(255, 255, 255, 0.16); border-color: transparent; color: #fff;
@@ -483,15 +576,16 @@ button.row { cursor: pointer; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
   .crumbs { display: none; }
   .brand-name { font-size: 15px; }
-  .section-bar { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+  .section-bar { justify-content: stretch; gap: var(--space-2); }
   .section-term { padding-bottom: var(--space-3); }
+  .toasts { right: var(--space-3); left: var(--space-3); bottom: var(--space-3); width: auto; }
   .row-item { flex-direction: column; gap: var(--space-1); }
   .row-item .when { width: auto; }
 }
 
 /* ── Print ───────────────────────────────────────────────────────────────── */
 @media print {
-  .sidebar, .topbar, .tabs, .page-actions, .no-print { display: none !important; }
+  .sidebar, .topbar, .page-actions, .no-print { display: none !important; }
   .app { display: block; }
   .content { padding: 0; }
   body { background: #fff; font-size: 11pt; }

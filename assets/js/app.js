@@ -30,6 +30,7 @@ const SITE_MAP = [
   ]},
   { label: 'Payments', iconKey: 'credit-card', bullets: [], kids: [
     { label: 'Tuition Fees', iconKey: 'receipt', bullets: ['Due Dates', 'Outstanding Balance', 'Payment Options'], kids: [] },
+    { label: 'Make a Payment', iconKey: 'banknote', bullets: ['Select Charges', 'Review & Confirm'], kids: [] },
     { label: 'Payment History', iconKey: 'clock', bullets: ['Transaction Logs', 'Status'], kids: [] },
     { label: 'Receipts', iconKey: 'receipt', bullets: ['Downloadable Proof of Payment'], kids: [] },
     { label: 'Scholarships', iconKey: 'gift', bullets: ['Grants', 'Financial Aid Status'], kids: [] }
@@ -61,6 +62,7 @@ const NAV = [
   ]},
   { group: 'Payments', items: [
     { label: 'Tuition Fees', href: '#/payments/fees', icon: 'credit-card' },
+    { label: 'Make a Payment', href: '#/payments/pay', icon: 'banknote' },
     { label: 'Payment History', href: '#/payments/history', icon: 'clock' },
     { label: 'Receipts', href: '#/payments/receipts', icon: 'receipt' },
     { label: 'Scholarships', href: '#/payments/scholarships', icon: 'gift' }
@@ -82,6 +84,7 @@ const ROUTES = Object.assign({}, RecordViews, MoreViews);
 
 const App = (() => {
   let currentSemId = SEMESTER_2.id;
+  let navigated = false;   // first paint is not a navigation — see render()
 
   const el = (id) => document.getElementById(id);
 
@@ -120,9 +123,9 @@ const App = (() => {
     });
   }
 
-  function render() {
+  function render(opts = {}) {
     const { path, query, href } = parseHash();
-    const view = ROUTES[path] || ROUTES['dashboard'];
+    const view = ROUTES[path] || ROUTES['notFound'];
     const ctx = { sem: semesterById(currentSemId), query, path };
 
     const root = el('view');
@@ -133,7 +136,8 @@ const App = (() => {
     el('crumbs').innerHTML = ['Portal', ...view.crumb].map((c, i, arr) =>
       i === arr.length - 1 ? `<span class="here">${c}</span>` : `<span>${c}</span><span class="sep">/</span>`
     ).join('');
-    markActive(ROUTES[path] ? href : '#/dashboard');
+    markActive(ROUTES[path] ? href : null);
+    UI.announce(view.title + ' loaded');
 
     // Behaviour. The semester picker is rendered by the view that owns it
     // (the four semester-scoped Academic Records pages), but the selection
@@ -141,14 +145,31 @@ const App = (() => {
     const termSel = root.querySelector('[data-term-select]');
     if (termSel) termSel.addEventListener('change', (e) => {
       currentSemId = e.target.value;
-      render();
+      render({ keepTermFocus: true });
     });
 
     Chart.attachTips(root);
     if (view.mount) view.mount(root, ctx);
 
     document.querySelector('.app').classList.remove('nav-open');
-    window.scrollTo(0, 0);
+
+    if (opts.keepTermFocus) {
+      // A term change re-renders the same page under the same heading, so put
+      // the user back on the control they just used instead of throwing them to
+      // the top. Focus ends where it started, which keeps this a change of
+      // CONTENT rather than a change of CONTEXT — and that is what lets the
+      // select stand without a "changing this reloads the page" warning (3.2.2).
+      const sel = root.querySelector('[data-term-select]');
+      if (sel) sel.focus();
+    } else {
+      // Send focus into the new page so a keyboard user is not left in the old
+      // page's tab order (2.4.3). #view already carries tabindex="-1". Skipped
+      // on the first paint, which would strand the skip link and the sidebar
+      // behind the user's very first Tab.
+      if (navigated) root.focus();
+      window.scrollTo(0, 0);
+    }
+    navigated = true;
   }
 
   function boot() {
@@ -163,7 +184,7 @@ const App = (() => {
     el('sidebar-toggle').addEventListener('click', () =>
       document.querySelector('.app').classList.toggle('nav-open'));
 
-    window.addEventListener('hashchange', render);
+    window.addEventListener('hashchange', () => render());
     if (!location.hash) location.hash = '#/dashboard';
     render();
   }

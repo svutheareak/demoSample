@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const MoreViews = (() => {
-  const { esc, icon, pageHead, card, tabs, table, statTile, badge, gradeBadge, attendanceBadge, payBadge, statusBadge, empty } = UI;
+  const { esc, icon, pageHead, card, table, statTile, badge, gradeBadge, attendanceBadge, payBadge, statusBadge, empty } = UI;
   const pct1 = (n) => n.toFixed(1) + '%';
 
   /* ── Dashboard ─────────────────────────────────────────────────────────── */
@@ -94,13 +94,6 @@ const MoreViews = (() => {
   };
 
   /* ── Payments ──────────────────────────────────────────────────────────── */
-  const PAY_TABS = [
-    { label: 'Tuition fees',    href: '#/payments/fees' },
-    { label: 'Payment history', href: '#/payments/history' },
-    { label: 'Receipts',        href: '#/payments/receipts' },
-    { label: 'Scholarships',    href: '#/payments/scholarships' }
-  ];
-
   const fees = {
     title: 'Tuition Fees',
     crumb: ['Payments', 'Tuition fees'],
@@ -118,11 +111,11 @@ const MoreViews = (() => {
         { html: payBadge(c.state) }
       ]);
 
-      return tabs(PAY_TABS, '#/payments/fees') + pageHead({
+      return pageHead({
         kicker: 'Payments',
         title: 'Tuition fees',
         lead: 'Every charge raised against your account, what has been settled, and what remains. Registration is blocked while a balance is outstanding.',
-        actions: `<a class="btn btn-primary" href="#/payments/history">Make a payment</a>`
+        actions: `<a class="btn btn-primary" href="#/payments/pay">${icon('banknote', 14)} Make a payment</a>`
       }) + `
         <div class="grid grid-4" style="margin-bottom:var(--space-4)">
           ${statTile({ label: 'Total charged', value: money(fin.charged), foot: `${fin.ledger.length} charges this year` })}
@@ -173,7 +166,7 @@ const MoreViews = (() => {
         return { label: MONTHS[+m - 1] + ' ' + y.slice(2), value: byMonth[k], tip: `${MONTHS[+m - 1]} ${y} · ${money(byMonth[k])}` };
       });
 
-      return tabs(PAY_TABS, '#/payments/history') + pageHead({
+      return pageHead({
         kicker: 'Payments', title: 'Payment history',
         lead: 'Every transaction recorded against your account, newest first.'
       }) + `
@@ -204,7 +197,7 @@ const MoreViews = (() => {
         { html: `<a class="btn btn-ghost btn-sm" href="#/payments/receipts?receipt=${p.id}">View</a>`, cls: 'right' }
       ]);
 
-      return tabs(PAY_TABS, '#/payments/receipts') + pageHead({
+      return pageHead({
         kicker: 'Payments', title: 'Receipts',
         lead: 'Downloadable proof of payment for every cleared transaction.'
       }) + `
@@ -224,14 +217,11 @@ const MoreViews = (() => {
             </dl>
             <hr class="hr">
             <p class="text-small text-muted">This receipt is issued by the Bursary of ${esc(Student.faculty)} and is valid without signature. Retain it for scholarship and tax purposes.</p>
-            <div class="page-actions"><button class="btn btn-primary" type="button" data-print>${icon('download', 14)} Print receipt</button></div>
+            <div class="page-actions"><button class="btn btn-primary" type="button" data-print="Receipt ${esc(selected.id)}">${icon('download', 14)} Print receipt</button></div>
           `, { title: 'Proof of payment', subtitle: selected.id })}</div>
         </div>`;
     },
-    mount(root) {
-      const b = root.querySelector('[data-print]');
-      if (b) b.addEventListener('click', () => window.print());
-    }
+    mount(root) { UI.wirePrint(root); }
   };
 
   const scholarships = {
@@ -248,7 +238,7 @@ const MoreViews = (() => {
         </dl>
         <p class="card-note">${esc(s.note)}</p>`, { title: s.name })).join('');
 
-      return tabs(PAY_TABS, '#/payments/scholarships') + pageHead({
+      return pageHead({
         kicker: 'Payments', title: 'Scholarships & financial aid',
         lead: 'Awards held, applications in flight, and the conditions attached to each.'
       }) + `
@@ -275,12 +265,6 @@ const MoreViews = (() => {
   };
 
   /* ── Reports ───────────────────────────────────────────────────────────── */
-  const REPORT_TABS = [
-    { label: 'Academic',   href: '#/reports/academic' },
-    { label: 'Attendance', href: '#/reports/attendance' },
-    { label: 'Financial',  href: '#/reports/financial' }
-  ];
-
   const reportAcademic = {
     title: 'Academic Reports',
     crumb: ['Reports', 'Academic'],
@@ -289,10 +273,10 @@ const MoreViews = (() => {
       const cum = cumulativeGPA();
       const creditsByTerm = hist.map((t) => ({ label: t.short, value: t.credits, tip: `${t.label} · ${t.credits} credits` }));
 
-      return tabs(REPORT_TABS, '#/reports/academic') + pageHead({
+      return pageHead({
         kicker: 'Reports', title: 'Academic reports',
         lead: 'Performance trends and credit accumulation across your whole programme.',
-        actions: `<button class="btn btn-secondary" type="button" data-print>${icon('download', 14)} Print report</button>`
+        actions: `<button class="btn btn-secondary" type="button" data-print="Academic report">${icon('download', 14)} Print report</button>`
       }) + `
         <div class="grid grid-4" style="margin-bottom:var(--space-4)">
           ${statTile({ label: 'Cumulative GPA', value: cum.gpa.toFixed(2), foot: 'All completed terms' })}
@@ -319,10 +303,7 @@ const MoreViews = (() => {
           }), { title: 'Term detail', subtitle: 'The table view of both charts' })}
         </div>`;
     },
-    mount(root) {
-      const b = root.querySelector('[data-print]');
-      if (b) b.addEventListener('click', () => window.print());
-    }
+    mount(root) { UI.wirePrint(root); }
   };
 
   const reportAttendance = {
@@ -348,7 +329,7 @@ const MoreViews = (() => {
         tip: `${c.code} · ${sem.label} · ${pct1(attendanceRate(c) * 100)}`
       })));
 
-      return tabs(REPORT_TABS, '#/reports/attendance') + pageHead({
+      return pageHead({
         kicker: 'Reports', title: 'Attendance reports',
         lead: 'Term summaries and a course-by-course comparison across the whole academic year.'
       }) + `
@@ -374,10 +355,10 @@ const MoreViews = (() => {
         byTerm[c.term].paid += c.paid;
       });
 
-      return tabs(REPORT_TABS, '#/reports/financial') + pageHead({
+      return pageHead({
         kicker: 'Reports', title: 'Financial reports',
         lead: 'A statement of account for the current academic year.',
-        actions: `<button class="btn btn-secondary" type="button" data-print>${icon('download', 14)} Print statement</button>`
+        actions: `<button class="btn btn-secondary" type="button" data-print="Statement of account">${icon('download', 14)} Print statement</button>`
       }) + `
         <div class="grid grid-3" style="margin-bottom:var(--space-4)">
           ${statTile({ label: 'Charged', value: money(fin.charged), foot: ACADEMIC_YEARS[0].label })}
@@ -412,10 +393,7 @@ const MoreViews = (() => {
           ])
         }), { title: 'Ledger', subtitle: 'Charges and credits in date order' })}`;
     },
-    mount(root) {
-      const b = root.querySelector('[data-print]');
-      if (b) b.addEventListener('click', () => window.print());
-    }
+    mount(root) { UI.wirePrint(root); }
   };
 
   /* ── Student Services ──────────────────────────────────────────────────── */
@@ -435,7 +413,7 @@ const MoreViews = (() => {
               <dt>Fee</dt><dd>${esc(s.fee)}</dd>
             </dl>
             <div class="page-actions" style="margin-top:var(--space-3)">
-              <button class="btn btn-secondary btn-sm" type="button" data-request>${esc(s.action)}</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-request="${esc(s.name)}">${esc(s.action)}</button>
             </div>`, { title: s.name })).join('')}
         </div>
         ${card(table({
@@ -450,7 +428,21 @@ const MoreViews = (() => {
     },
     mount(root) {
       root.querySelectorAll('[data-request]').forEach((b) =>
-        b.addEventListener('click', () => { b.textContent = '✓ Submitted'; b.disabled = true; }));
+        b.addEventListener('click', () => {
+          if (b.getAttribute('aria-disabled') === 'true') return;
+          const name = b.dataset.request;
+          const svc = Services.find((s) => s.name === name);
+          // One open request per service — a second is refused as a duplicate.
+          const open = ServiceRequests.find((r) => r.service === name && r.status !== 'Completed');
+          if (open) {
+            UI.toast(`${name} already has an open request — ${open.id}, ${open.status.toLowerCase()}.`,
+                     { status: 'error' });
+            return;
+          }
+          b.textContent = '✓ Submitted';
+          b.setAttribute('aria-disabled', 'true');
+          UI.toast(`${name} requested — ${svc ? svc.turnaround.toLowerCase() : 'in progress'}.`);
+        }));
     }
   };
 
@@ -532,10 +524,303 @@ const MoreViews = (() => {
     mount(root) {
       const b = root.querySelector('[data-send]');
       if (b) b.addEventListener('click', () => {
+        if (b.getAttribute('aria-disabled') === 'true') return;
         const ta = root.querySelector('#reply');
-        if (ta && ta.value.trim()) { b.textContent = '✓ Reply sent'; b.disabled = true; ta.disabled = true; }
-        else if (ta) ta.focus();
+        if (!ta) return;
+        if (!ta.value.trim()) {
+          UI.toast('Type a reply before sending.', { status: 'error' });
+          ta.focus();
+          return;
+        }
+        b.textContent = '✓ Reply sent'; b.setAttribute('aria-disabled', 'true'); ta.disabled = true;
+        UI.toast('Reply sent to the lecturer.');
       });
+    }
+  };
+
+  /* ── Make a payment ────────────────────────────────────────────────────── */
+  /* A payment is a financial transaction, so WCAG 3.3.4 Error Prevention
+     (Legal, Financial, Data) applies at AA. This flow takes the "Confirmed"
+     route: nothing reaches the ledger until the student has seen a breakdown of
+     exactly what will be charged, against which invoices, and pressed Confirm.
+
+     Finance.payments is the single record every money figure derives from, so
+     one pushed payment moves the fees table, the dashboard alert, payment
+     history, receipts, the financial report and the transcript hold together.
+     Nothing is persisted — a refresh reloads data.js and the account returns to
+     its seeded state, which is what makes this safe to demo repeatedly. */
+
+  /* The bursary counter and the instalment plan are arranged in person, so
+     these are the two options that can actually be completed here. */
+  const ONLINE_METHODS = ['ABA Bank transfer', 'Wing / mobile wallet'];
+
+  function payForm(due, state, errs) {
+    const e = (g) => errs.find((x) => x.group === g);
+    const errBlock = (g) => e(g)
+      ? `<p class="field-error" id="${g}-error">${icon('alert-circle', 14)}<span>${esc(e(g).msg)}</span></p>` : '';
+    const groupDesc = (g, hint) => {
+      const ids = (hint ? [hint] : []).concat(e(g) ? [g + '-error'] : []);
+      return ids.length ? ` aria-describedby="${ids.join(' ')}"` : '';
+    };
+    const invalid = (g) => e(g) ? ' aria-invalid="true"' : '';
+    const selTotal = due.filter((c) => state.picked.includes(c.id))
+                        .reduce((s, c) => s + c.outstanding, 0);
+
+    return `
+      ${errs.length ? `
+      <div class="error-summary" role="alert" tabindex="-1" data-error-summary>
+        <h4>${errs.length === 1 ? 'There is a problem' : 'There are ' + errs.length + ' problems'}</h4>
+        <ul>${errs.map((x) =>
+          `<li><button type="button" class="error-jump" data-jump="${esc(x.focus)}">${esc(x.msg)}</button></li>`).join('')}</ul>
+      </div>` : ''}
+
+      <form data-pay-form novalidate>
+        <fieldset class="fieldset"${groupDesc('charges', 'charges-hint')}>
+          <legend>Charges to settle</legend>
+          <p class="text-small text-muted" id="charges-hint">Select one or more unpaid invoices.</p>
+          ${errBlock('charges')}
+          ${due.map((c) => `
+            <div class="pick">
+              <input type="checkbox" id="chg-${esc(c.id)}" name="charge" value="${esc(c.id)}"${state.picked.includes(c.id) ? ' checked' : ''}${invalid('charges')}>
+              <label for="chg-${esc(c.id)}">
+                <span class="pick-title"><span class="code">${esc(c.id)}</span> ${esc(c.desc)}</span>
+                <span class="pick-meta">Due ${esc(fmtDate(c.due))} · <strong>${money(c.outstanding)}</strong> outstanding</span>
+              </label>
+            </div>`).join('')}
+        </fieldset>
+
+        <fieldset class="fieldset">
+          <legend>Amount</legend>
+          <div class="pick">
+            <input type="radio" id="amt-full" name="amount-mode" value="full"${state.mode === 'full' ? ' checked' : ''}>
+            <label for="amt-full">
+              <span class="pick-title">Pay the full outstanding amount</span>
+              <span class="pick-meta"><strong data-sel-total>${money(selTotal)}</strong> on the charges selected above</span>
+            </label>
+          </div>
+          <div class="pick">
+            <input type="radio" id="amt-part" name="amount-mode" value="part"${state.mode === 'part' ? ' checked' : ''}>
+            <label for="amt-part"><span class="pick-title">Pay a different amount</span></label>
+          </div>
+          <div class="field pick-child" data-custom${state.mode === 'part' ? '' : ' hidden'}>
+            <label for="amount">Amount to pay (USD)</label>
+            ${errBlock('amount')}
+            <input class="input" type="number" id="amount" name="amount" inputmode="decimal" min="0.01" step="0.01"
+                   value="${esc(state.amount)}" aria-describedby="amount-hint${e('amount') ? ' amount-error' : ''}"${invalid('amount')}>
+            <p class="text-small text-muted" id="amount-hint">Spread across the selected invoices, oldest first.</p>
+          </div>
+        </fieldset>
+
+        <fieldset class="fieldset"${groupDesc('method')}>
+          <legend>Payment method</legend>
+          ${errBlock('method')}
+          ${Finance.options.filter((o) => ONLINE_METHODS.includes(o.name)).map((o, i) => `
+            <div class="pick">
+              <input type="radio" id="m-${i}" name="method" value="${esc(o.name)}"${state.method === o.name ? ' checked' : ''}${invalid('method')}>
+              <label for="m-${i}">
+                <span class="pick-title">${esc(o.name)}</span>
+                <span class="pick-meta">${esc(o.detail)}</span>
+              </label>
+            </div>`).join('')}
+          <p class="card-note">The bursary counter and the instalment plan are arranged in person — see the payment options on <a href="#/payments/fees">tuition fees</a>.</p>
+        </fieldset>
+
+        <div class="page-actions">
+          <button class="btn btn-primary" type="submit">Review payment</button>
+          <a class="btn btn-secondary" href="#/payments/fees">Cancel</a>
+        </div>
+      </form>`;
+  }
+
+  function payReview(alloc, method, total) {
+    return `
+      <div data-review>
+        <h4 id="review-heading" tabindex="-1">Check this before you pay</h4>
+        <p class="text-muted">Nothing has been charged yet. This is exactly what will be recorded.</p>
+        ${table({
+          head: ['Invoice', 'Description', { label: 'Applied', right: true }],
+          rows: alloc.map((a) => [
+            { html: `<span class="code">${esc(a.id)}</span>` },
+            esc(a.desc),
+            { html: money(a.applied), cls: 'num right' }
+          ]),
+          foot: [{ html: '<strong>Total</strong>' }, { html: '' },
+                 { html: '<strong>' + money(total) + '</strong>', cls: 'num right' }]
+        })}
+        <dl class="kv" style="margin-top:var(--space-4)">
+          <dt>Method</dt><dd>${esc(method)}</dd>
+          <dt>Reference</dt><dd class="num">${esc(Student.id)}</dd>
+          <dt>Date</dt><dd class="num">${esc(fmtDate(TODAY))}</dd>
+        </dl>
+        <div class="page-actions" style="margin-top:var(--space-4)">
+          <button class="btn btn-primary" type="button" data-confirm>Confirm payment of ${money(total)}</button>
+          <button class="btn btn-secondary" type="button" data-back>Back to edit</button>
+        </div>
+      </div>`;
+  }
+
+  function wirePay(root) {
+    const panel = root.querySelector('[data-pay-panel]');
+    if (!panel) return;
+
+    const due = financeSummary().ledger.filter((c) => c.outstanding > 0);
+    const state = { picked: due.map((c) => c.id), mode: 'full', amount: '', method: '' };
+    const selTotal = () => due.filter((c) => state.picked.includes(c.id))
+                              .reduce((s, c) => s + c.outstanding, 0);
+
+    function read() {
+      state.picked = Array.from(panel.querySelectorAll('input[name="charge"]:checked')).map((i) => i.value);
+      const mode = panel.querySelector('input[name="amount-mode"]:checked');
+      state.mode = mode ? mode.value : 'full';
+      const amt = panel.querySelector('#amount');
+      state.amount = amt ? amt.value : '';
+      const m = panel.querySelector('input[name="method"]:checked');
+      state.method = m ? m.value : '';
+    }
+
+    function validate() {
+      read();
+      const errs = [];
+      const total = selTotal();
+      if (!state.picked.length) {
+        errs.push({ group: 'charges', focus: 'chg-' + due[0].id, msg: 'Select at least one charge to pay.' });
+      }
+      let amount = total;
+      if (state.mode === 'part') {
+        const raw = String(state.amount).trim();
+        const v = Number(raw);
+        if (!raw) {
+          errs.push({ group: 'amount', focus: 'amount', msg: 'Enter the amount you want to pay.' });
+        } else if (!isFinite(v) || v <= 0) {
+          errs.push({ group: 'amount', focus: 'amount', msg: 'Enter an amount greater than zero — for example 25.00.' });
+        } else if (state.picked.length && v > total) {
+          errs.push({ group: 'amount', focus: 'amount',
+                      msg: `Enter ${money(total)} or less — that is the total outstanding on the charges you selected.` });
+        } else {
+          amount = Math.round(v * 100) / 100;
+        }
+      }
+      if (!state.method) {
+        errs.push({ group: 'method', focus: 'm-0', msg: 'Choose how you want to pay.' });
+      }
+      return { errs, amount };
+    }
+
+    function paintForm(errs) {
+      panel.innerHTML = payForm(due, state, errs);
+      wireForm();
+    }
+
+    function showReview(amount) {
+      const alloc = allocatePayment(due.filter((c) => state.picked.includes(c.id)), amount);
+      panel.innerHTML = payReview(alloc, state.method, amount);
+
+      const heading = panel.querySelector('#review-heading');
+      if (heading) heading.focus();
+
+      panel.querySelector('[data-back]').addEventListener('click', () => {
+        paintForm([]);
+        const first = panel.querySelector('input[name="charge"]');
+        if (first) first.focus();
+      });
+
+      // Money must not move twice on a double click or a double Enter.
+      let settled = false;
+      panel.querySelector('[data-confirm]').addEventListener('click', (ev) => {
+        if (settled) return;
+        settled = true;
+        ev.currentTarget.setAttribute('aria-disabled', 'true');
+
+        const id = recordPayment({
+          method: state.method, amount, against: alloc.map((a) => a.id)
+        });
+
+        UI.toast(`Payment of ${money(amount)} recorded — receipt ${id}.`);
+        location.hash = '#/payments/fees';
+      });
+    }
+
+    function wireForm() {
+      const form = panel.querySelector('[data-pay-form]');
+      if (!form) return;
+
+      // Keep the running total and the custom-amount field honest as the
+      // selection changes, without repainting and throwing focus away.
+      form.addEventListener('change', () => {
+        read();
+        const tot = panel.querySelector('[data-sel-total]');
+        if (tot) tot.textContent = money(selTotal());
+        const custom = panel.querySelector('[data-custom]');
+        if (custom) custom.hidden = state.mode !== 'part';
+      });
+
+      // The error summary cannot use in-page anchors: this app routes on the
+      // hash, so href="#amount" would navigate instead of moving focus.
+      panel.querySelectorAll('[data-jump]').forEach((b) =>
+        b.addEventListener('click', () => {
+          const target = panel.querySelector('#' + b.dataset.jump);
+          if (target) target.focus();
+        }));
+
+      form.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const { errs, amount } = validate();
+        if (errs.length) {
+          paintForm(errs);
+          const summary = panel.querySelector('[data-error-summary]');
+          if (summary) summary.focus();
+          UI.toast(errs.length === 1
+            ? 'One field needs attention before you can continue.'
+            : errs.length + ' fields need attention before you can continue.', { status: 'error' });
+          return;
+        }
+        showReview(amount);
+      });
+    }
+
+    wireForm();
+  }
+
+  const payNow = {
+    title: 'Make a payment',
+    crumb: ['Payments', 'Make a payment'],
+    render() {
+      const due = financeSummary().ledger.filter((c) => c.outstanding > 0);
+      const head = pageHead({
+        kicker: 'Payments', title: 'Make a payment',
+        lead: 'Settle an outstanding charge. You will see a summary to check before anything is recorded against your account.'
+      });
+
+      if (!due.length) {
+        return head + card(
+          empty('Nothing outstanding', 'Every charge on your account is settled, so there is nothing to pay right now.') +
+          `<p class="card-note"><a href="#/payments/fees">Back to tuition fees</a> · <a href="#/payments/receipts">View receipts</a></p>`,
+          { title: 'Account settled' });
+      }
+
+      return head + card(
+        `<div data-pay-panel>${payForm(due, { picked: due.map((c) => c.id), mode: 'full', amount: '', method: '' }, [])}</div>`,
+        { title: 'Payment details',
+          subtitle: money(due.reduce((s, c) => s + c.outstanding, 0)) + ' outstanding across ' + due.length + (due.length === 1 ? ' charge' : ' charges') });
+    },
+    mount(root) { wirePay(root); }
+  };
+
+  /* ── Unknown route ─────────────────────────────────────────────────────── */
+  /* A stale or mistyped hash used to render the dashboard silently, leaving the
+     user somewhere they did not ask for with nothing said about it (3.3.1). */
+  const notFound = {
+    title: 'Page not found',
+    crumb: ['Page not found'],
+    render() {
+      return pageHead({
+        kicker: 'Error', title: 'Page not found',
+        lead: 'That address does not match a page in this portal.'
+      }) + card(`
+        <p>The link may be out of date, or the address may have been mistyped.</p>
+        <p><a href="#/dashboard">Return to the dashboard</a> or open the
+           <a href="#/sitemap">site map</a> to see every page.</p>`,
+        { title: 'What to do next' });
     }
   };
 
@@ -557,6 +842,7 @@ const MoreViews = (() => {
   return {
     'dashboard': dashboard,
     'payments/fees': fees,
+    'payments/pay': payNow,
     'payments/history': history,
     'payments/receipts': receipts,
     'payments/scholarships': scholarships,
@@ -566,6 +852,7 @@ const MoreViews = (() => {
     'services': services,
     'lms': lms,
     'communication': communication,
-    'sitemap': sitemap
+    'sitemap': sitemap,
+    'notFound': notFound
   };
 })();

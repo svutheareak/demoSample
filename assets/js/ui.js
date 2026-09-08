@@ -34,6 +34,10 @@ const UI = (() => {
     download: [['path',{d:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'}],['polyline',{points:'7 10 12 15 17 10'}],['line',{x1:12,x2:12,y1:15,y2:3}]],
     menu: [['line',{x1:4,x2:20,y1:6,y2:6}],['line',{x1:4,x2:20,y1:12,y2:12}],['line',{x1:4,x2:20,y1:18,y2:18}]],
     'arrow-right': [['path',{d:'M5 12h14'}],['path',{d:'m12 5 7 7-7 7'}]],
+    banknote: [['rect',{width:20,height:12,x:2,y:6,rx:2}],['circle',{cx:12,cy:12,r:2}],['path',{d:'M6 12h.01'}],['path',{d:'M18 12h.01'}]],
+    x: [['path',{d:'M18 6 6 18'}],['path',{d:'m6 6 12 12'}]],
+    'check-circle': [['circle',{cx:12,cy:12,r:10}],['path',{d:'m9 12 2 2 4-4'}]],
+    'alert-circle': [['circle',{cx:12,cy:12,r:10}],['line',{x1:12,x2:12,y1:8,y2:12}],['line',{x1:12,x2:12.01,y1:16,y2:16}]],
     'alert-triangle': [['path',{d:'m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'}],['path',{d:'M12 9v4'}],['path',{d:'M12 17h.01'}]],
     'external-link': [['path',{d:'M15 3h6v6'}],['path',{d:'M10 14 21 3'}],['path',{d:'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'}]]
   };
@@ -66,12 +70,6 @@ const UI = (() => {
       ? `<div class="card-head"><div><h4>${esc(title)}</h4>${subtitle ? `<p>${esc(subtitle)}</p>` : ''}</div>${aside || ''}</div>`
       : '';
     return `<section class="card ${className}">${head}${body}</section>`;
-  }
-
-  function tabs(items, currentHref) {
-    return `<nav class="tabs no-print" aria-label="Section">${items.map((it) =>
-      `<a class="tab" href="${it.href}"${it.href === currentHref ? ' aria-current="page"' : ''}>${esc(it.label)}</a>`
-    ).join('')}</nav>`;
   }
 
   function table({ head, rows, foot, className = '' }) {
@@ -156,6 +154,89 @@ const UI = (() => {
       .map((b) => `<div class="tree-col">${treeNode(b, 0)}</div>`).join('')}</div>`;
   }
 
+  /* ── Toasts ───────────────────────────────────────────────────────────── */
+  /* Transient status for the actions that would hit a server. Each toast owns
+     its role — status for a success, alert for a failure — so the two get the
+     politeness they deserve without a shared region having to pick one. The
+     role sits on an inner wrapper so the close button's label is not read out
+     as part of the message.
+
+     On the auto-dismiss: a countdown the user cannot control is a 2.2.1 (Timing
+     Adjustable) concern, so three things hold here. The timer pauses while the
+     toast is hovered or focused; every toast has a close button; and nothing is
+     announced ONLY in a toast — the button label and the page state carry the
+     same outcome after it has gone, so a missed toast loses no information.
+     Set TOAST_MS to 0 to turn auto-dismiss off entirely. */
+  const TOAST_MS = 3000;
+  const TOAST_MAX = 4;      // cap the stack; oldest goes first
+
+  function toast(message, opts = {}) {
+    const { status = 'success', duration = TOAST_MS } = opts;
+    const host = document.getElementById('toasts');
+    if (!host) return null;
+
+    while (host.children.length >= TOAST_MAX) host.firstElementChild.remove();
+
+    const ok = status !== 'error';
+    const node = document.createElement('div');
+    node.className = 'toast is-' + (ok ? 'success' : 'error');
+    node.innerHTML =
+      `<div class="toast-live" role="${ok ? 'status' : 'alert'}">
+         <span class="toast-icon">${icon(ok ? 'check-circle' : 'alert-circle', 18)}</span>
+         <p class="toast-msg">${esc(message)}</p>
+       </div>
+       <button class="toast-close" type="button" aria-label="Dismiss this message">${icon('x', 14)}</button>`;
+
+    let timer = null;
+    const stop = () => clearTimeout(timer);
+    const close = () => {
+      stop();
+      if (!node.parentNode) return;
+      node.classList.add('is-leaving');
+      const done = () => node.remove();
+      node.addEventListener('transitionend', done, { once: true });
+      setTimeout(done, 300);        // fallback when transitions are off
+    };
+    const start = () => { if (duration > 0) timer = setTimeout(close, duration); };
+
+    node.querySelector('.toast-close').addEventListener('click', close);
+    // Pause the countdown while the message is being read or reached (2.2.1).
+    node.addEventListener('mouseenter', stop);
+    node.addEventListener('mouseleave', start);
+    node.addEventListener('focusin', stop);
+    node.addEventListener('focusout', start);
+
+    host.appendChild(node);
+    requestAnimationFrame(() => node.classList.add('is-in'));
+    start();
+    return node;
+  }
+
+  /* Print and download buttons. data-print names what is being produced, so a
+     single handler serves every page; data-print-blocked, where present, is the
+     reason the action is unavailable — a button held open with aria-disabled
+     can say why it will not act, which a dead disabled button cannot. */
+  function wirePrint(root) {
+    root.querySelectorAll('[data-print]').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (b.getAttribute('aria-disabled') === 'true') {
+          if (b.dataset.printBlocked) toast(b.dataset.printBlocked, { status: 'error' });
+          return;
+        }
+        window.print();
+        toast((b.dataset.print || 'Document') + ' sent to your print dialog.');
+      });
+    });
+  }
+
+  /* Write a status message into the polite live region (4.1.3). Only for
+     things that change after the page has settled without focus moving —
+     announcing static content just makes the page noisier. */
+  function announce(msg) {
+    const live = document.getElementById('live');
+    if (live) live.textContent = msg;
+  }
+
   function attachTree(root) {
     root.querySelectorAll('[data-tree]').forEach((treeEl) => {
       treeEl.addEventListener('click', (e) => {
@@ -169,6 +250,6 @@ const UI = (() => {
     });
   }
 
-  return { esc, icon, pageHead, card, tabs, table, empty, statTile, badge, gradeBadge,
-           attendanceBadge, payBadge, statusBadge, tree, attachTree };
+  return { esc, icon, pageHead, card, table, empty, statTile, badge, gradeBadge,
+           attendanceBadge, payBadge, statusBadge, tree, attachTree, announce, toast, wirePrint };
 })();

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Academic Portal</title>
 <meta name="description" content="Student portal — academic records, attendance, grades, exams, payments and reports.">
-<meta name="theme-color" content="#3b4ee0">
+<meta name="theme-color" content="#3458f4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -53,6 +53,14 @@
     <main class="content" id="view" tabindex="-1"></main>
   </div>
 </div>
+
+<!-- Status messages (4.1.3): changes that happen after the page has settled are
+     written here. Content present on load is already in the reading order. -->
+<div id="live" role="status" aria-live="polite" class="sr-only"></div>
+
+<!-- Toast host. Each toast carries its own role (status / alert), so the strip
+     itself is not a live region — it only positions them. -->
+<div id="toasts" class="toasts no-print"></div>
 
 <!-- Classic scripts in dependency order — no modules, so file:// works. -->
 <script src="assets/js/data.js"></script>

@@ -12,18 +12,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const RecordViews = (() => {
-  const { esc, icon, pageHead, card, tabs, table, statTile, badge, gradeBadge, attendanceBadge, empty } = UI;
-
-  const TABS = [
-    { label: 'Overview',   href: '#/records' },
-    { label: 'Courses',    href: '#/records/courses' },
-    { label: 'Attendance', href: '#/records/attendance' },
-    { label: 'Grades',     href: '#/records/grades' },
-    { label: 'Exams',      href: '#/records/exams' },
-    { label: 'GPA',        href: '#/records/gpa' },
-    { label: 'Transcript', href: '#/records/transcript' },
-    { label: 'Calendar',   href: '#/records/calendar' }
-  ];
+  const { esc, icon, pageHead, card, table, statTile, badge, gradeBadge, attendanceBadge, empty } = UI;
 
   const pct1 = (n) => n.toFixed(1) + '%';
 
@@ -43,7 +32,7 @@ const RecordViews = (() => {
            </select>
          </div>`
       : '';
-    return `<div class="section-bar no-print">${tabs(TABS, route)}${picker}</div>`;
+    return picker ? `<div class="section-bar no-print">${picker}</div>` : '';
   }
 
   /* ── Overview — the Academic Year node ─────────────────────────────────── */
@@ -377,7 +366,9 @@ const RecordViews = (() => {
         <hr class="hr">
         <p class="text-small text-muted">Bring this ticket and your student ID card. Candidates arriving more than 30 minutes after the start are not admitted. Electronic devices must be switched off and left at the front of the hall.</p>
         <div class="page-actions">
-          <button class="btn btn-primary" type="button" data-print${blocked ? ' disabled' : ''}>${icon('file-text', 14)} Print hall ticket</button>
+          <button class="btn btn-primary" type="button" data-print="Hall ticket"${blocked
+            ? ` aria-disabled="true" data-print-blocked="Hall ticket withheld — ${esc(selected.code)} attendance is ${pct1(attendanceRate(course) * 100)}, below the ${ATTENDANCE_THRESHOLD * 100}% requirement. Clear the hold with the registry first."`
+            : ''}>${icon('file-text', 14)} Print hall ticket</button>
           <a class="btn btn-secondary" href="#/records/attendance">Check attendance</a>
         </div>`;
 
@@ -407,10 +398,7 @@ const RecordViews = (() => {
         }) : empty('No marks yet', 'Final marks appear here once the registry publishes results for this semester.'),
           { title: 'Final marks', subtitle: graded.length ? `${graded.length} published` : 'Awaiting publication' })}`;
     },
-    mount(root) {
-      const btn = root.querySelector('[data-print]');
-      if (btn) btn.addEventListener('click', () => window.print());
-    }
+    mount(root) { UI.wirePrint(root); }
   };
 
   /* ── GPA ───────────────────────────────────────────────────────────────── */
@@ -577,7 +565,7 @@ const RecordViews = (() => {
         kicker: 'Academic Records',
         title: 'Transcript',
         lead: 'A complete record of every completed term. The unofficial copy is available immediately; an official sealed copy is issued by the registry on request.',
-        actions: `<button class="btn btn-primary" type="button" data-print>${icon('download', 14)} Download unofficial (PDF)</button>
+        actions: `<button class="btn btn-primary" type="button" data-print="Unofficial transcript">${icon('download', 14)} Download unofficial (PDF)</button>
                   <button class="btn btn-secondary" type="button" data-request>Request official copy</button>`
       }) + `
         <div style="margin-bottom:var(--space-4)">${card(`
@@ -610,12 +598,22 @@ const RecordViews = (() => {
         </div>`;
     },
     mount(root) {
-      const print = root.querySelector('[data-print]');
-      if (print) print.addEventListener('click', () => window.print());
+      UI.wirePrint(root);
+
+      // The registry will not seal an official copy while fees are owed, so
+      // this is the one action here that can genuinely come back refused.
+      const fin = financeSummary();
       root.querySelectorAll('[data-request]').forEach((b) =>
         b.addEventListener('click', () => {
+          if (b.getAttribute('aria-disabled') === 'true') return;
+          if (fin.outstanding > 0) {
+            UI.toast(`Official copy refused — ${money(fin.outstanding)} is outstanding on your account. `
+                   + `Settle the balance, then request again.`, { status: 'error' });
+            return;
+          }
           b.textContent = '✓ Request submitted — SR-4502';
-          b.disabled = true;
+          b.setAttribute('aria-disabled', 'true');
+          UI.toast('Official transcript requested. Reference SR-4502 — ready in five working days.');
         }));
     }
   };

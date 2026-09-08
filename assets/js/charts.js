@@ -2,11 +2,11 @@
    charts.js — hand-rolled SVG charts, no library.
 
    Every chart here is SINGLE-SERIES and painted in one hue (--viz-series,
-   #ec3013). That is a deliberate constraint: the palette validator puts
-   status-good #0ca30c at ΔE 1.7 from the accent under deuteranopia, so a
-   multi-hue categorical set built from Modernist's two ramps could not be made
-   colourblind-safe. One hue per chart sidesteps the problem entirely — and a
-   single series needs no legend, since the title says what is plotted.
+   currently #3458f4). That is a deliberate constraint: a multi-hue categorical
+   set built from this palette's two ramps could not be made colourblind-safe —
+   a blue series and a green status badge sit close together under deuteranopia.
+   One hue per chart sidesteps the problem entirely — and a single series needs
+   no legend, since the title says what is plotted.
 
    Mark specs follow the house rules: 2px lines, ≥8px markers ringed in the
    surface colour, bars capped at 24px with a 4px rounded data-end square at the
